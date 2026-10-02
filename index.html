@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Smiths Screens — Measurement Tool</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{--black:#050505;--grey:#f1f1f1;--mid:#777;--line:#ddd;--red:#9d1c1c;--amber:#fff3cd}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#e8e8e8;color:#111;font-family:Arial,Helvetica,sans-serif}
+body{min-height:100vh}
+.app{max-width:720px;margin:auto;min-height:100vh;background:#fff}
+.screen{display:none;min-height:100vh}.screen.active{display:block}
+.splash{background:#000;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px}
+.logo{width:92%;max-width:560px;display:block}
+.splash .tag{font-size:14px;letter-spacing:2px;color:#cfcfcf;margin:22px 0 30px;text-align:center}
+.header{background:#000;color:#fff;padding:10px 15px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5}
+.mini{width:58px;height:44px;object-fit:contain}
+.brand{font-weight:800;letter-spacing:1px;font-size:16px}.headtitle{margin-left:auto;font-size:12px;color:#ccc;text-align:right}
+main{padding:21px 17px 36px}
+h1{font-size:26px;margin:0 0 6px}h2{font-size:23px;margin:0 0 6px}
+.sub{color:#666;font-size:15px;line-height:1.4;margin-bottom:18px}
+.jobbar{background:#f2f2f2;border-left:4px solid #111;padding:13px;border-radius:8px;margin-bottom:17px;font-size:14px;line-height:1.5}
+.progress{display:flex;gap:5px;margin:0 0 18px}.dot{height:5px;background:#ddd;border-radius:4px;flex:1}.dot.on{background:#000}
+.card{border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:13px}
+.card h3{margin:0 0 11px;font-size:18px}
+label{display:block;font-weight:800;margin:17px 0 8px}
+input[type=text],input[type=number],textarea,select{width:100%;font-size:18px;padding:14px;border:2px solid #ccc;border-radius:11px;background:#fff}
+input[type=number]{font-size:30px;text-align:center}
+textarea{min-height:100px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.choice,.btn{width:100%;border:0;border-radius:12px;padding:16px 10px;font-size:16px;font-weight:800;cursor:pointer;background:#eee;color:#111}
+.choice{border:2px solid #ddd;min-height:60px}.choice.selected{background:#000;color:#fff;border-color:#000}
+.primary{background:#000;color:#fff}.secondary{background:#eee;color:#111;margin-top:10px}
+.danger{background:#f7dfdf;border:1px solid #d99;color:#7b1111}.amber{background:var(--amber);border:1px solid #e1c45b}
+.btnrow{display:flex;gap:9px}.btnrow>*{flex:1}
+.check{display:flex;gap:11px;align-items:flex-start;padding:11px 0;font-size:15px;line-height:1.35}.check input{width:24px;height:24px;flex:none}
+.small{font-size:12px;color:#777}.muted{color:#777}
+.hidden{display:none!important}
+.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.photo{border:1px solid #ccc;border-radius:10px;padding:5px}.photo img{width:100%;display:block;border-radius:7px}
+.footer{text-align:center;color:#999;font-size:11px;letter-spacing:.5px;padding:20px}
+.summary-row{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:10px 0;gap:15px}.summary-row:last-child{border-bottom:0}
+.status{display:inline-block;padding:5px 8px;border-radius:8px;background:#eee;font-size:12px;font-weight:800}
+.status.review{background:#f7dfdf;color:#7b1111}.status.ready{background:#e7e7e7;color:#111}
+.complete{text-align:center;padding:45px 18px}.complete .logo{background:#000;padding:10px;margin:auto}.complete h1{margin-top:24px}
+@media(min-width:721px){body{padding:20px 0}.app{border-radius:15px;overflow:hidden;box-shadow:0 4px 25px #bbb}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<section class="screen active" id="home">
+ <div class="splash">
+  <img class="logo" src="assets/smiths_logo.png" alt="Smiths Screens">
+  <div class="tag">OFFLINE MOBILE MEASUREMENT TOOL</div>
+  <button class="btn primary" onclick="newVisit()">START MEASUREMENT VISIT</button>
+  <button class="btn secondary" onclick="resumeVisit()">RESUME SAVED VISIT</button>
+  <div class="small" style="color:#aaa;margin-top:18px">Works offline after installation / first load.</div>
+ </div>
+</section>
+
+<section class="screen" id="visit">
+ <div class="header"><img class="mini" src="assets/smiths_logo.png" alt=""><div class="brand">SMITHS SCREENS</div><div class="headtitle">Measurement Visit</div></div>
+ <main>
+  <div class="progress"><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+  <h1>Measurement Visit</h1><div class="sub">Start the visit, then add each window or door one at a time.</div>
+  <div class="jobbar" id="visitInfo"></div>
+  <div class="card">
+   <h3>What are you measuring?</h3>
+   <div class="grid2">
+    <button class="choice" onclick="startItem('Window')">＋ ADD WINDOW</button>
+    <button class="choice" onclick="startItem('Door')">＋ ADD DOOR</button>
+   </div>
+  </div>
+  <div class="card">
+   <h3>Visit progress</h3>
+   <div id="counts"></div>
+  </div>
+  <button class="btn primary" onclick="finishVisit()">FINISH MEASUREMENT VISIT</button>
+  <button class="btn secondary" onclick="show('home')">← HOME</button>
+ </main>
+ <div class="footer">Smiths Screens • Offline Measurement Tool</div>
+</section>
+
+<section class="screen" id="itemLocation">
+ <div class="header"><img class="mini" src="assets/smiths_logo.png" alt=""><div class="brand">SMITHS SCREENS</div><div class="headtitle">Add Item</div></div><main>
+  <div class="progress"><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+  <h2 id="itemHeading"></h2><div class="sub">Choose the location first. No measurements on this screen.</div>
+  <label>LOCATION</label><div id="locations" class="grid2"></div>
+  <label>OTHER / MANUAL LOCATION</label><input id="otherLocation" type="text" placeholder="Only if needed">
+  <div id="windowPositionWrap" class="hidden"><label>WINDOW POSITION / SHORT NOTE <span class="muted" style="font-weight:400">(optional)</span></label><input id="positionNote" type="text" placeholder="e.g. left of sink, rear window"></div>
+  <div id="windowProducts" class="hidden"><label>PRODUCT</label><div class="grid2">
+   <button class="choice" onclick="pickProduct('T10 Window')">T10 Window</button>
+   <button class="choice" onclick="pickProduct('Unika Window')">Unika Window</button>
+   <button class="choice" onclick="pickProduct('Genius Window')">Genius Window</button>
+  </div></div>
+  <div id="doorProducts" class="hidden"><label>PRODUCT</label><div class="grid2">
+   <button class="choice" onclick="pickProduct('Regal Door')">Regal Door</button>
+   <button class="choice" onclick="pickProduct('Unika Door')">Unika Door</button>
+   <button class="choice" onclick="pickProduct('Genius Door')">Genius Door</button>
+  </div></div>
+  <button class="btn primary" onclick="continueFromLocation()">CONTINUE</button>
+  <button class="btn secondary" onclick="show('visit')">← BACK</button>
+ </main>
+</section>
+
+<section class="screen" id="config">
+ <div class="header"><img class="mini" src="assets/smiths_logo.png" alt=""><div class="brand">SMITHS SCREENS</div><div class="headtitle">Configuration</div></div><main>
+  <div class="progress"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div>
+  <h2>Configuration</h2><div class="sub">Choose only the options that affect the checks, measurement or order.</div>
+  <div class="jobbar" id="configInfo"></div><div id="configFields"></div>
+  <button class="btn primary" onclick="continueConfig()">CONTINUE TO FLYDOR CHECK</button>
+  <button class="btn secondary" onclick="show('itemLocation')">← BACK</button>
+ </main>
+</section>
+
+<section class="screen" id="check">
+ <div class="header"><img class="mini" src="assets/smiths_logo.png" alt=""><div class="brand">SMITHS SCREENS</div><div class="headtitle">Flydor Check</div></div><main>
+  <div class="progress"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot"></span></div>
+  <h2>Flydor Check</h2><div class="sub">Check the relevant fitting points before taking the final screen measurement.</div>
+  <div class="jobbar" id="checkInfo"></div><div id="checkList"></div>
+  <div class="card amber"><b>Something doesn't look right?</b><br><span class="small">STOP → PHOTOGRAPH → SKETCH → MEASURE → FLAG → REVIEW AT OFFICE</span>
+   <button class="choice danger" style="margin-top:12px" onclick="flagEarly()">OFFICE REVIEW REQUIRED — DO NOT ORDER</button>
+  </div>
+  <button class="btn primary" onclick="continueCheck()">CONTINUE TO OPTIONS</button>
+  <button class="btn secondary" onclick="show('config')">← BACK</button>
+ </main>
+</section>
+
+<section class="screen" id="extras">
+ <div class="header"><img class="mini" src="assets/smiths_logo.png" alt=""><div class="brand">SMITHS SCREENS</div><div class="headtitle">Options</div></div><main>
+  <div class="progress"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div>
+  <h2>Options & Order Details</h2><div class="sub">Only record choices that affect the order. These can be updated as real-world fitting experience develops.</div>
+  <div class="jobbar" id="extraInfo"></div><div id="extraFields"></div>
+  <button class="btn primary" onclick="goMeasure()">CONTINUE TO FINAL MEASUREMENT</button>
+  <button class="btn secondary" onclick="show('check')">← BACK</button>
+ </main>
+</section>
+
+<section class="screen" id="measure">
+ <div class="header"><img class="mini" src="assets/smiths_logo.png" alt=""><div class="brand">SMITHS SCREENS</div><div class="headtitle">Final Screen Size</div></div><main>
+  <h2>Final Screen Size</h2><div class="sub">Enter the actual Flydor screen size you have measured.</div>
+  <div class="jobbar" id="measureInfo"></div>
+  <label>WIDTH — mm</label><input id="width" type="number" inputmode="numeric" min="1" step="1" placeholder="e.g. 1082">
+  <label>HEIGHT — mm</label><input id="height" type="number" inputmode="numeric" min="1" step="1" placeholder="e.g. 345">
+  <label>HOW WAS IT MEASURED?</label><div class="grid3">
+   <button class="choice" onclick="setMethod(this,'Tape')">Tape</button>
+   <button class="choice" onclick="setMethod(this,'Laser')">Laser</button>
+   <button class="choice" onclick="setMethod(this,'Both / Verified')">Both / Verified</button>
+  </div>
+  <div class="card" style="margin-top:18px"><b>Important</b><br><span class="small">Enter the actual Flydor screen dimensions. Do <b>not</b> add hinge, turnbutton, bracket or other fitting clearances to these numbers.</span></div>
+  <div id="sizeWarning" class="card amber hidden"></div>
+  <div class="check"><input id="sizeConfirm" type="checkbox"><span>I have checked the opening and these are the final screen dimensions I intend to order.</span></div>
+  <button class="btn primary" onclick="saveMeasurement()">CONFIRM MEASUREMENT</button>
+  <button class="btn secondary" onclick="show('extras')">← BACK</button>
+ </main>
+</section>
+
+<section class="screen" id="photos">
+ <div class="header"><img class="mini" src="assets/smiths_logo.png" alt=""><div class="brand">SMITHS SCREENS</div><div class="headtitle">Photos</div></div><main>
+  <h2>Photos</h2><div class="sub">Add useful evidence for this individual item. There is no artificial minimum.</div>
+  <div class="jobbar" id="photoInfo"></div>
+  <button class="btn primary" onclick="document.getElementById('camera').click()">📷 TAKE / ADD PHOTO</button>
+  <input id="camera" type="file" accept="image/*" capture="environment" multiple class="hidden">
+  <div id="photoGrid" class="photo-grid"></div>
+  <div class="card"><b>Useful examples</b><br><span class="small">Overall opening • fixing area • bottom/threshold • obstruction • anything that may help at the office.</span></div>
+  <button class="btn primary" onclick="goUnusual()">CONTINUE TO UNUSUAL CHECK</button>
+  <button class="btn secondary" onclick="show('measure')">← BACK</button>
+ </main>
+</section>
+
+<section class="screen" id="unusual">
+ <div class="header"><img class="mini" src="assets/smiths_logo.png" alt=""><div class="brand">SMITHS SCREENS</div><div class="headtitle">Review</div></div><main>
+  <h2>Anything Unusual?</h2><div class="sub">If it is straightforward, say No. If something is not right, stop and flag it rather than guessing.</div>
+  <button id="normalBtn" class="choice" onclick="setUnusual(false)">NO — STRAIGHTFORWARD</button>
+  <button id="unusualBtn" class="choice" style="margin-top:10px" onclick="setUnusual(true)">YES — SOMETHING NEEDS REVIEW</button>
+  <div id="unusualDetails" class="hidden">
+   <div class="card danger"><b>OFFICE REVIEW REQUIRED — DO NOT ORDER</b><br><span class="small">STOP → PHOTOGRAPH → SKETCH → MEASURE → FLAG → REVIEW AT OFFICE</span></div>
+   <label>WHAT NEEDS CHECKING?</label><div id="reasons" class="grid2"></div>
+   <label>SHORT NOTE (OPTIONAL)</label><textarea id="unusualNote" placeholder="Briefly describe what needs checking..."></textarea>
+   <div class="check"><input id="sketchCheck" type="checkbox"><span>I have photographed my graph-paper sketch if a sketch was needed.</span></div>
+  </div>
+  <button class="btn primary" onclick="saveItem()">SAVE THIS ITEM</button>
+  <button class="btn secondary" onclick="show('photos')">← BACK</button>
+ </main>
+</section>
+
+<section class="screen" id="savedItem">
+ <div class="header"><img class="mini" src="assets/smiths_logo.png" alt=""><div class="brand">SMITHS SCREENS</div><div class="headtitle">Item Saved</div></div><main>
+  <h2>Measurement Item Saved</h2><div class="sub">Review the summary, then return to the visit to add the next window or door.</div>
+  <div id="savedSummary" class="card"></div>
+  <button class="btn primary" onclick="show('visit')">RETURN TO MEASUREMENT VISIT</button>
+ </main>
+</section>
+
+<section class="screen" id="finished">
+ <div class="complete">
+  <img class="logo" src="assets/smiths_logo.png" alt="Smiths Screens">
+  <h1>Measurement Visit Complete</h1>
+  <p id="finishText"></p>
+  <button class="btn primary" onclick="exportVisit()">EXPORT VISIT DATA</button>
+  <button class="btn secondary" onclick="show('visit')">RETURN TO VISIT</button>
+  <div class="footer">Smiths Screens • Offline Measurement Tool</div>
+ </div>
+</section>
+
+<script>
+const KEY='smithsScreensMeasurementV9';
+let state=JSON.parse(localStorage.getItem(KEY)||'null')||{visit:null,items:[],current:null};
+let method='', unusual=false, reasons=[], photos=[];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+function persist(){localStorage.setItem(KEY,JSON.stringify(state))}
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');window.scrollTo(0,0)}
+function Header({title}){return}
+document.querySelectorAll('.header').forEach(()=>{});
+
+function headerHTML(title){return `<div class="header"><img class="mini" src="assets/smiths_logo.png" alt=""><div class="brand">SMITHS SCREENS</div><div class="headtitle">${title}</div></div>`}
+document.querySelectorAll('#visit,#itemLocation,#config,#check,#extras,#measure,#photos,#unusual,#savedItem').forEach(sec=>{
+  const h=sec.querySelector('.header'); if(h) h.outerHTML=headerHTML(h.querySelector('.headtitle')?.textContent||'');
+});
+
+function newVisit(){
+ state={visit:null,items:[],current:null}; persist();
+ const ref=prompt('Job reference (example: SS-26-001):','SS-26-001');
+ if(!ref)return;
+ const customer=prompt('Customer name:','');
+ if(!customer)return;
+ const address=prompt('Property address:','');
+ if(!address)return;
+ state.visit={jobRef:ref,customer,address,date:new Date().toISOString()};
+ persist(); renderVisit(); show('visit');
+}
+function resumeVisit(){
+ if(!state.visit){alert('No saved measurement visit found.');return}
+ renderVisit();show('visit');
+}
+function renderVisit(){
+ $('visitInfo').innerHTML=`<b>Job:</b> ${esc(state.visit.jobRef)}<br><b>Customer:</b> ${esc(state.visit.customer)}<br><b>Address:</b> ${esc(state.visit.address)}`;
+ const w=state.items.filter(x=>x.type==='Window').length,d=state.items.filter(x=>x.type==='Door').length;
+ $('counts').innerHTML=`Windows: <b>${w}</b> &nbsp; | &nbsp; Doors: <b>${d}</b> &nbsp; | &nbsp; Total items: <b>${state.items.length}</b>`;
+}
+function startItem(type){
+ state.current={id:Date.now(),type,location:'',positionNote:'',product:'',config:{},extras:{},width:'',height:'',method:'',photos:[],unusual:false,reasons:[],note:'',status:'DRAFT'};
+ state.current.locations=type==='Window'?['Kitchen','Bathroom','Bedroom','Living Room','Dining Room','Utility Room','Office','Conservatory','Landing','Other']:['Front Door','Rear Door','Side Door','Patio Door','Other'];
+ $('itemHeading').textContent='Add '+type;
+ $('locations').innerHTML=state.current.locations.map(x=>`<button class="choice" onclick="pickLocation(this,'${x}')">${x}</button>`).join('');
+ $('windowProducts').classList.toggle('hidden',type!=='Window');$('doorProducts').classList.toggle('hidden',type!=='Door');
+ $('windowPositionWrap').classList.toggle('hidden',type!=='Window');
+ $('otherLocation').value='';$('positionNote').value=''; show('itemLocation');
+}
+function pickLocation(btn,val){document.querySelectorAll('#locations .choice').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');state.current.location=val}
+function pickProduct(p){state.current.product=p;document.querySelectorAll('#windowProducts .choice,#doorProducts .choice').forEach(b=>b.classList.toggle('selected',b.textContent.trim()===p))}
+function continueFromLocation(){
+ const other=$('otherLocation').value.trim(); if(other)state.current.location=other;
+ if(!state.current.location){alert('Choose a location.');return}
+ if(!state.current.product){alert('Choose a product.');return}
+ state.current.positionNote=state.current.type==='Window'?$('positionNote').value.trim():'';
+ renderConfig();show('config');
+}
+function renderConfig(){
+ const p=state.current.product, c=state.current.config;
+ $('configInfo').innerHTML=`<b>Location:</b> ${esc(state.current.location)}<br><b>Product:</b> ${esc(p)}`;
+ let html='';
+ if(p==='T10 Window') html=`<label>CONFIGURATION</label><div class="grid2">${['Fixed','Hinged','Turnbutton','Fixed + Brush','Hinged + Brush'].map(x=>choice('config',x,c.config)).join('')}</div>`;
+ else if(p==='Unika Window'||p==='Genius Window') html=`<label>FIT TYPE</label><div class="grid2">${['Face Fit','Recess Fit'].map(x=>choice('config',x,c.config)).join('')}</div>`;
+ else if(p==='Regal Door') html=`<label>DOOR TYPE</label><div class="grid2">${['Single Door'].map(x=>choice('doorType',x,c.doorType||'Single Door')).join('')}</div><div class="notice">Regal is face-fit only. Single door is the current supported configuration in this tool.</div>`;
+ else {
+  html=`<label>DOOR TYPE</label><div class="grid2">${['Single Door','Double Door'].map(x=>choice('doorType',x,c.doorType)).join('')}</div>`;
+  html+=`<label>FIT TYPE</label><div class="grid2">${['Face Fit','Recess Fit'].map(x=>choice('config',x,c.config)).join('')}</div>`;
+  if(c.doorType==='Double Door')html+=`<label>SHOOT-BOLT SIDE</label><div class="grid2">${['Left','Right'].map(x=>choice('shoot',x,c.shoot)).join('')}</div>`;
+ }
+ $('configFields').innerHTML=html;
+}
+function choice(key,val,current){return `<button class="choice ${current===val?'selected':''}" onclick="setConfig('${key}','${val}')">${val}</button>`}
+function setConfig(k,v){state.current.config[k]=v;renderConfig()}
+function continueConfig(){
+ const c=state.current.config,p=state.current.product;
+ if(!c.config && (p!=='Regal Door')){alert('Choose the relevant fit/configuration.');return}
+ if((p==='Unika Door'||p==='Genius Door'||p==='Regal Door')&&!c.doorType){c.doorType='Single Door'}
+ if((p==='Genius Door')&&c.doorType==='Double Door'&&!c.shoot){alert('Choose the shoot-bolt side.');return}
+ renderCheck();show('check');
+}
+function renderCheck(){
+ const p=state.current.product,c=state.current.config;
+ $('checkInfo').innerHTML=`<b>${esc(p)}</b> • ${esc(c.config||c.doorType||'')}`;
+ let a=[];
+ if(p==='T10 Window'){
+  if(c.config==='Hinged'||c.config==='Hinged + Brush')a.push('Check 13 mm hinge fitting space.');
+  if(c.config==='Turnbutton')a.push('Check 12 mm turnbutton fitting space.');
+  if(c.config==='Fixed + Brush'||c.config==='Hinged + Brush')a.push('Check brush/seal arrangement and fixing area.');
+ } else if(p==='Unika Window'||p==='Genius Window'){
+  a.push(c.config==='Face Fit'?'Check 15 mm face-fit bracket space.':'Check 5 mm recess M-clip space.');
+  if(p==='Genius Window')a.push('If there is no sill, check whether additional bottom channel/seal arrangement is required.');
+ } else if(p==='Regal Door'){
+  a=['Check 13 mm hinge fitting space.','Check 15 mm magnetic catch fitting space.','Check handle/door furniture and surrounding fixing area.','Check threshold / plinth / lip.'];
+ } else if(p==='Unika Door'){
+  a=[c.config==='Face Fit'?'Check 15 mm face-fit space.':'Check 5 mm recess M-clip space.','Check threshold / plinth / lip.','Check door furniture and cassette/guide space.'];
+  if(c.doorType==='Double Door')a.push('Check double-door shoot-bolt arrangement.');
+ } else if(p==='Genius Door'){
+  a=[c.config==='Face Fit'?'Check 15 mm face-fit space.':'Check the relevant M-clip recess fixing space.','Check threshold / plinth / lip.','Check door furniture and obstructions.'];
+  if(c.doorType==='Double Door')a.push('Confirm shoot-bolt side: '+c.shoot+'.');
+ }
+ $('checkList').innerHTML=a.map((x,i)=>`<div class="check"><input type="checkbox" id="ck${i}"><span>${x}</span></div>`).join('');
+}
+function flagEarly(){state.current.status='OFFICE REVIEW REQUIRED — DO NOT ORDER';alert('This item has been flagged. You will still record photos and the unusual condition before it can be treated as complete.');}
+function continueCheck(){renderExtras();show('extras')}
+function renderExtras(){
+ const p=state.current.product,e=state.current.extras;
+ $('extraInfo').innerHTML=`<b>${esc(p)}</b> • ${esc(state.current.location)}${state.current.positionNote?` • ${esc(state.current.positionNote)}`:''}`;
+ let html='';
+ if(p==='T10 Window')html=`<label>MESH</label><select id="mesh"><option>Standard Fibreglass Charcoal</option><option>Other / Special Mesh</option></select><label>FINISH</label><select id="finish"><option>White</option><option>Special RAL / Colour</option></select><div class="check"><input id="mitred" type="checkbox"><span>Mitred corners</span></div>`;
+ if(p==='Unika Window')html=`<label>MESH</label><select id="mesh"><option>Standard Fibreglass Charcoal</option><option>BetterVue Long Drop</option></select><label>FINISH</label><select id="finish"><option>White</option><option>Brown</option><option>Black</option><option>Anthracite Grey</option><option>Special RAL</option></select><div class="check"><input id="anti" type="checkbox"><span>Anti-wind pile</span></div><div class="check"><input id="soft" type="checkbox"><span>Soft-close brake</span></div><div class="check"><input id="reinforced" type="checkbox"><span>Reinforced bar profile handle</span></div><div class="check"><input id="stops" type="checkbox"><span>Intermediate stops</span></div>`;
+ if(p==='Genius Window')html=`<label>CONTROL / OPERATION</label><select id="control"><option>Spring only</option><option>Chain + Spring</option><option>SLS</option><option>Chain only</option></select><label>MESH</label><select id="mesh"><option>Standard Fibreglass Charcoal</option><option>Tuff Mesh</option><option>Midge Mesh</option><option>BetterVue</option></select><label>FINISH</label><select id="finish"><option>White</option><option>Brown</option><option>Special RAL / Colour</option></select><div class="check"><input id="anti" type="checkbox"><span>Anti-wind pile</span></div><div class="check"><input id="reinforced" type="checkbox"><span>Reinforced bar profile handle</span></div><div class="check"><input id="caps" type="checkbox"><span>7 mm cover caps</span></div><div class="check"><input id="lh" type="checkbox"><span>LH chain operation</span></div><div class="notice">BetterVue maximum drop is 1700 mm according to the Genius guide.</div>`;
+ if(p==='Regal Door')html=`<label>MESH</label><select id="mesh"><option>Standard Fibreglass Charcoal</option><option>Other Mesh</option></select><label>FINISH</label><select id="finish"><option>White</option><option>Brown</option><option>Special RAL</option></select><label>SUBFRAME</label><select id="subframe"><option>No subframe</option><option>3-sided PVC packer subframe</option><option>4-sided PVC packer subframe</option></select>`;
+ if(p==='Unika Door')html=`<label>FINISH</label><select id="finish"><option>White</option><option>Brown</option><option>Black</option><option>Anthracite Grey</option><option>Special RAL</option></select><div class="check"><input id="anti" type="checkbox"><span>Anti-wind pile</span></div><div class="check"><input id="reinforced" type="checkbox"><span>Reinforced bar handle profile</span></div><div class="notice">Standard Unika door mesh, soft-close brake and 7 mm cover caps are not repeated here because the guide lists them as standard. Double-door shoot bolts are recorded in Configuration.</div>`;
+ if(p==='Genius Door')html=`<label>MESH</label><select id="mesh"><option>Standard Fibreglass Charcoal</option><option>Tuff Mesh</option><option>Midge Mesh</option></select><label>FINISH</label><select id="finish"><option>White</option><option>Brown</option><option>Special RAL</option></select><div class="check"><input id="anti" type="checkbox"><span>Anti-wind pile</span></div><div class="check"><input id="reinforced" type="checkbox"><span>Reinforced bar profile handle</span></div><div class="check"><input id="caps" type="checkbox"><span>7 mm cover caps</span></div>`;
+ html+=`<div class="notice">These are the Flydor product-guide options currently confirmed for this app. Supplier price-list/component options will only be added when separately confirmed.</div>`;
+ $('extraFields').innerHTML=html;
+}
+function readExtras(){
+ const ids=['mesh','finish','control','subframe','mitred','soft','stops','anti','reinforced','caps','lh'];
+ ids.forEach(id=>{const x=$(id);if(x)state.current.extras[id]=x.type==='checkbox'?x.checked:x.value});
+}
+function goMeasure(){readExtras();method='';$('width').value=state.current.width||'';$('height').value=state.current.height||'';document.querySelectorAll('#measure .choice').forEach(b=>b.classList.remove('selected'));if(state.current.method){method=state.current.method;document.querySelectorAll('#measure .choice').forEach(b=>{if(b.textContent.trim()===method)b.classList.add('selected')})} $('measureInfo').innerHTML=`<b>${esc(state.current.product)}</b> • ${esc(state.current.location)}<br><b>Configuration:</b> ${esc(state.current.config.config||state.current.config.doorType||'')}`;show('measure')}
+function setMethod(btn,val){document.querySelectorAll('#measure .choice').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');method=val}
+function saveMeasurement(){
+ const w=parseInt($('width').value,10),h=parseInt($('height').value,10);
+ if(!w||!h){alert('Enter both width and height in millimetres.');return}
+ if(!method){alert('Select how the measurement was taken.');return}
+ if(!$('sizeConfirm').checked){alert('Please confirm the final screen dimensions before saving.');return}
+ state.current.width=w;state.current.height=h;state.current.method=method;
+ let warn='';
+ if(w>3000||h>3000)warn='These dimensions are unusually large. Double-check the Flydor range and use Office Review if required.';
+ if(w<200||h<200)warn='These dimensions are unusually small. Double-check the measurement and Flydor range.';
+ $('sizeWarning').innerHTML=warn; $('sizeWarning').classList.toggle('hidden',!warn);
+ if(warn && !confirm('An unusual size has been detected. Save and continue to review, or cancel to recheck?'))return;
+ persist();renderPhotos();show('photos');
+}
+$('camera').addEventListener('change',async e=>{
+ for(const file of [...e.target.files]){
+  const data=await fileToDataURL(file);state.current.photos.push({name:file.name,data}); 
+ }
+ renderPhotos();persist();e.target.value='';
+});
+function fileToDataURL(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
+function renderPhotos(){
+ $('photoInfo').innerHTML=`<b>${esc(state.current.product)}</b> • ${esc(state.current.location)}<br><b>Size:</b> ${state.current.width} × ${state.current.height} mm`;
+ $('photoGrid').innerHTML=state.current.photos.map((p,i)=>`<div class="photo"><img src="${p.data}" alt=""><div class="small">Photo ${i+1}</div></div>`).join('');
+}
+function goUnusual(){renderReasons();show('unusual')}
+function renderReasons(){const rs=['Obstruction','Uneven opening','Chamfer / angled area','Plinth / lip / threshold','Limited fixing space','Difficult / reflective surface','Other'];$('reasons').innerHTML=rs.map(x=>`<button class="choice ${reasons.includes(x)?'selected':''}" onclick="toggleReason('${x}')">${x}</button>`).join('')}
+function toggleReason(x){if(reasons.includes(x))reasons=reasons.filter(r=>r!==x);else reasons.push(x);renderReasons()}
+function setUnusual(v){unusual=v;$('normalBtn').classList.toggle('selected',!v);$('unusualBtn').classList.toggle('selected',v);$('unusualDetails').classList.toggle('hidden',!v)}
+function saveItem(){
+ if(!unusual && !$('normalBtn').classList.contains('selected')){alert('Select No or Yes before continuing.');return}
+ if(unusual && !reasons.length){alert('Select what needs checking.');return}
+ state.current.unusual=unusual;state.current.reasons=[...reasons];state.current.note=$('unusualNote').value.trim();
+ state.current.status=(unusual||state.current.status==='OFFICE REVIEW REQUIRED — DO NOT ORDER')?'OFFICE REVIEW REQUIRED — DO NOT ORDER':'READY FOR NEXT STAGE';
+ state.current.locationDisplay=state.current.type==='Window'?`${state.current.location} — Window ${state.items.filter(x=>x.type==='Window'&&x.location===state.current.location).length+1}`:state.current.location;
+ state.items.push(JSON.parse(JSON.stringify(state.current)));persist();
+ renderSaved();show('savedItem');
+}
+function renderSaved(){
+ const x=state.current;
+ $('savedSummary').innerHTML=`<div class="summary-row"><b>Item</b><span>${esc(x.type)} — ${esc(x.locationDisplay||x.location)}${x.positionNote?`<br><span class=\"small\">${esc(x.positionNote)}</span>`:''}</span></div><div class="summary-row"><b>Product</b><span>${esc(x.product)}</span></div><div class="summary-row"><b>Size</b><span>${x.width} × ${x.height} mm</span></div><div class="summary-row"><b>Method</b><span>${esc(x.method)}</span></div><div class="summary-row"><b>Photos</b><span>${x.photos.length}</span></div><div class="summary-row"><b>Status</b><span class="status ${x.status.startsWith('OFFICE')?'review':'ready'}">${esc(x.status)}</span></div>`;
+}
+function finishVisit(){
+ if(!state.visit){return}
+ const review=state.items.filter(x=>x.status.startsWith('OFFICE')).length;
+ $('finishText').innerHTML=`<b>${state.items.length}</b> item(s) recorded.<br>${review?`<b>${review}</b> item(s) require office review before ordering.`:'No unresolved office-review items recorded.'}<br><br>Finishing the visit does not automatically make an item ready to order.`;
+show('finished');
+}
+function exportVisit(){
+ const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(state.visit?.jobRef||'smiths-screens-visit')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+</script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+</script>
+</body>
+</html>
